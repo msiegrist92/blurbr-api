@@ -28,7 +28,7 @@ const user_schema = Schema({
       if(value.length < 6){
         throw new Error ("Password must be longer than 6 characters")
       }
-      if(value.toLowerCase() ==== 'password'){
+      if(value.toLowerCase() === 'password'){
         throw new Error ('cmon now')
       }
     }
@@ -62,5 +62,7 @@ const user_schema = Schema({
     type: String
   }
 
-
 })
+
+const User = mongoose.model('User', user_schema);
+module.exports = User;
