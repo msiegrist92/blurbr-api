@@ -1,8 +1,22 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
 const User = require('../db/schemas/user.js');
 
 const router = new express.Router();
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploads)
+  },
+  filename: (req, file, cb) => {
+    cb(null, file.fieldname + '-' + Date.now())
+  }
+})
+
+const upload = multer({storage: storage});
 
 router.get('/user', async (req, res) => {
   await res.send('hey fucker')
@@ -12,9 +26,14 @@ router.post('/user/register', async (req, res) => {
 
   let data = req.body;
   console.log(data);
-  const check = await User.findOne({email: data.email});
-  if(check != null){
+  const check_email = await User.findOne({email: data.email});
+  const check_user = await User.findOne({username: data.username})
+  if(check_email != null ){
     return res.status(400).send("Email already in use");
+  }
+
+  if (check_user != null){
+    return res.status(400).send("Username already in use");
   }
 
   const user = new User({
@@ -23,7 +42,12 @@ router.post('/user/register', async (req, res) => {
     email: data.email,
     password: data.password,
     username: data.username,
-    signature: data.signature
+  })
+
+  router.post('/user/avatar', upload.single('image'), (req, res) => {
+    //find user by id
+    console.log(req.file);
+    //update user avatar to the image uploaded
   })
 
   try {

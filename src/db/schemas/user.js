@@ -36,17 +36,22 @@ const user_schema = Schema({
     type: String,
     required: true,
     trim: true,
+    unique: true,
     validate(value){
       if(value.length < 4){
         throw new Error ("Username must be atleast 4 characters")
       }
+
+      if (value.length > 20){
+        throw new Error ("Username must be less than 20 characters")
+      }
     }
   },
 
+  //user makes account then customizes with avatar and signature
   //default value will only be used if passed in as UNDEFINED
   signature: {
     type: String,
-    required: true,
     default: '',
     validate(value){
       if(value.length > 120){
