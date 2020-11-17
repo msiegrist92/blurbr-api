@@ -10,7 +10,9 @@ router.get('/user', async (req, res) => {
 
 router.post('/user/register', async (req, res) => {
 
-  const check = await User.findOne({email: req.body.email});
+  let data = req.body;
+  console.log(data);
+  const check = await User.findOne({email: data.email});
   if(check != null){
     return res.status(400).send("Email already in use");
   }
@@ -18,7 +20,18 @@ router.post('/user/register', async (req, res) => {
   const user = new User({
     //turn req.body into User here
     //need to wire up multer to grab avatar image first to try
+    email: data.email,
+    password: data.password,
+    username: data.username,
+    signature: data.signature
   })
+
+  try {
+    await user.save();
+    res.status(201).send();
+  } catch (error) {
+    res.status(500).send(error);
+  }
 })
 
 router.get('/user/:id', async (req, res) => {
@@ -30,7 +43,7 @@ router.get('/user/:id', async (req, res) => {
     if(user === null){
       return res.status(400).send('User not found')
     } else {
-      res.send(user);
+      res.status(200).send(user);
     }
   } catch(error){
     return res.status(500).send(err)

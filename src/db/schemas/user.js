@@ -6,8 +6,6 @@ const Schema = mongoose.Schema;
 
 const user_schema = Schema({
 
-  _id: Schema.Types.ObjectId,
-
   email : {
     lowercase: true,
     unique: true,
@@ -60,7 +58,17 @@ const user_schema = Schema({
   avatar: {
     data: Buffer,
     type: String
-  }
+  },
+
+  topics : [{
+    type: Schema.Types.ObjectId,
+    ref: "Topic"
+  }],
+
+  tokens: [{
+    type: Schema.Types.ObjectId,
+    ref: "Token"
+  }]
 
 })
 

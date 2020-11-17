@@ -3,10 +3,9 @@ const Schema = mongoose.Schema;
 
 const topic_schema = Schema({
 
-  _id: Schema.Types.ObjectId,
-
   title: {
     type: String,
+    required: true,
     validate(value){
       if(value.length > 40){
         throw new Error ("Title must be less than 40 characters")
@@ -20,18 +19,22 @@ const topic_schema = Schema({
   },
 
   last_post: {
-    type: Schema.Types.ObjectId
+    type: Schema.Types.ObjectId,
+    ref: "User"
   },
 
-  //created by is a reference to the author of the topic
-  created_by: {
-    type: Schema.Types.ObjectId
+  //retrieve the id of user making the topic from the token
+  author: {
+    type: Schema.Types.ObjectId,
+    ref: "User"
   },
 
-  //posts is an array of posts where owner === id this topic
-  posts: {
-    type: Number
-  }
+  //posts is populated to render posts when a user views a forum topic
+  posts: [{
+    type: Schema.Types.ObjectId,
+    ref: "Post"
+  }]
 })
 
 const Topic = mongoose.model('Topic', topic_schema );
+module.exports = Topic;
