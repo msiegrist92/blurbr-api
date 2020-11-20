@@ -46,14 +46,19 @@ router.post('/user/register', async (req, res) => {
   router.post('/user/:id/avatar', upload.single('file'), async (req, res, next) => {
     //find user by id
     console.log(req.file);
-    //update user avatar to the image uploaded
-    await pipeline(req.file.stream, fs.createWriteStream(`${__dirname}/../../uploads/avatarimage.jpg`));
+    const filename = 'avatar' + Date.now() + '.jpg';
+    console.log(filename);
 
-    // const user = await User.findById(req.params.id);
-    // user.avatar = req.body;
+    await pipeline(req.file.stream, fs.createWriteStream(`${__dirname}/../../uploads/${filename}`));
+
+    const user = await User.findById(req.params.id);
+    if(user === null){
+      return res.status(400).send("Bad request");
+    }
+    user.avatar = filename;
   try {
-    // await user.save();
-    // console.log(user);
+    await user.save();
+    console.log(user);
     res.status(201).send();
   } catch (error) {
     console.log(error);
