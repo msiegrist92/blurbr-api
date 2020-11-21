@@ -78,7 +78,7 @@ router.get('/user/:id', async (req, res) => {
       res.status(200).send(user);
     }
   } catch(error){
-    return res.status(500).send(err)
+    return res.status(500).send(error)
   }
 
 })
