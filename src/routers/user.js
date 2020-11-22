@@ -9,10 +9,6 @@ const User = require('../db/schemas/user.js');
 
 const router = new express.Router();
 
-router.get('/user', async (req, res) => {
-  await res.send('hey fucker')
-})
-
 router.post('/user/register', async (req, res) => {
 
   let data = req.body;
@@ -32,7 +28,6 @@ router.post('/user/register', async (req, res) => {
       username: data.username,
       signature: 'this is at emp signature'
   })
-  console.log(user)
   try {
     await user.save();
     res.status(201).send();
@@ -43,13 +38,12 @@ router.post('/user/register', async (req, res) => {
 })
 
   const upload = multer();
-  router.post('/user/:id/avatar', upload.single('file'), async (req, res, next) => {
-    //find user by id
-    console.log(req.file);
-    const filename = 'avatar' + Date.now() + '.jpg';
-    console.log(filename);
+router.post('/user/:id/avatar', upload.single('file'), async (req, res, next) => {
 
-    await pipeline(req.file.stream, fs.createWriteStream(`${__dirname}/../../uploads/${filename}`));
+    const filename = 'avatar' + Date.now() + '.jpg';
+
+    await pipeline(req.file.stream,
+      fs.createWriteStream(`${__dirname}/../../uploads/${filename}`));
 
     const user = await User.findById(req.params.id);
     if(user === null){
@@ -63,6 +57,23 @@ router.post('/user/register', async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).send(error);
+  }
+})
+
+router.post('/user/:id/signature', async (req, res) => {
+  const signature = req.body.signature;
+
+  const user = await User.findById(req.params.id);
+  if (user === null){
+    return res.status(400).send('Bad request');
+  }
+
+  try {
+    user.signature = signature;
+    await user.save();
+    res.status(201).send(user.signature);
+  } catch (err) {
+    res.status(500).send();
   }
 })
 
