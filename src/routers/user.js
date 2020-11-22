@@ -52,8 +52,7 @@ router.post('/user/:id/avatar', upload.single('file'), async (req, res, next) =>
     user.avatar = filename;
   try {
     await user.save();
-    console.log(user);
-    res.status(201).send();
+    res.status(201).send(user);
   } catch (error) {
     console.log(error);
     res.status(500).send(error);
