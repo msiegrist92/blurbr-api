@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 const { promisify } = require('util');
 const fs = require('fs');
@@ -37,6 +38,27 @@ router.post('/user/register', async (req, res) => {
     res.status(201).send(token);
   } catch (error) {
     res.status(500).send();
+  }
+})
+
+router.post('/user/login', async (req, res) => {
+  console.log(req.body);
+  const user = await User.find({email: req.body.email});
+  if (user === null){
+    return res.status(400).send("User not found");
+  }
+
+  const password = await bcrypt.hash(req.body.password, 8);
+
+  if(password != user.password){
+    return res.status(400).send("Incorrect password");
+  }
+
+  try {
+    const token = await user.generateAuthToken();
+    res.status(200).send(token);
+  } catch (err) {
+    res.status(500).send(err);
   }
 
 })
