@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const pipeline = promisify(require('stream').pipeline);
+const jwt = require('jsonwebtoken');
 const User = require('../db/schemas/user.js');
 
 const router = new express.Router();
@@ -12,13 +13,15 @@ const router = new express.Router();
 router.post('/user/register', async (req, res) => {
 
   let data = req.body;
+
   const check_email = await User.findOne({email: data.email});
   const check_user = await User.findOne({username: data.username})
+
   if(check_email != null ){
-    return res.status(400).send("Email already in use");
+    return res.status(400).send('Email already in use')
   }
 
-  if (check_user != null){
+  if(check_user != null){
     return res.status(400).send("Username already in use");
   }
 
@@ -31,7 +34,6 @@ router.post('/user/register', async (req, res) => {
   try {
     await user.save();
     const token = await user.generateAuthToken();
-    console.log(token);
     res.status(201).send(token);
   } catch (error) {
     res.status(500).send();
@@ -39,19 +41,28 @@ router.post('/user/register', async (req, res) => {
 
 })
 
-  const upload = multer();
+const upload = multer();
 router.post('/user/:id/avatar', upload.single('file'), async (req, res, next) => {
 
-    const filename = 'avatar' + Date.now() + '.jpg';
+  if(!req.body.token){
+    return res.status(401).send('Session expired please log in')
+  }
 
-    await pipeline(req.file.stream,
-      fs.createWriteStream(`${__dirname}/../../uploads/${filename}`));
+  if(jwt.verify(req.body.token, process.env.JWT_SECRET)._id != req.params.id){
+    return res.status(403).send('No')
+  }
 
-    const user = await User.findById(req.params.id);
-    if(user === null){
-      return res.status(400).send("Bad request");
-    }
-    user.avatar = filename;
+  const filename = 'avatar' + Date.now() + '.jpg';
+
+  await pipeline(req.file.stream,
+    fs.createWriteStream(`${__dirname}/../../uploads/${filename}`));
+
+  const user = await User.findById(req.params.id);
+  if(user === null){
+    return res.status(404).send("User not found");
+  }
+  user.avatar = filename;
+
   try {
     await user.save();
     res.status(201).send(user);
@@ -62,11 +73,20 @@ router.post('/user/:id/avatar', upload.single('file'), async (req, res, next) =>
 })
 
 router.post('/user/:id/signature', async (req, res) => {
+
+  if(!req.body.token){
+    return res.status(401).send("Session expired please log in")
+  }
+
+  if(jwt.verify(req.body.token, process.env.JWT_SECRET)._id != req.params.id){
+    return res.status(403).send('Bad request')
+  }
+
   const signature = req.body.signature;
 
   const user = await User.findById(req.params.id);
   if (user === null){
-    return res.status(400).send('Bad request');
+    return res.status(404).send('User not found');
   }
 
   try {
@@ -74,7 +94,7 @@ router.post('/user/:id/signature', async (req, res) => {
     await user.save();
     res.status(201).send(user.signature);
   } catch (err) {
-    res.status(500).send();
+    res.status(500).send('Signature too long');
   }
 })
 
