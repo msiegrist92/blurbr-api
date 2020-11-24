@@ -36,7 +36,8 @@ const topic_schema = Schema({
   //retrieve the id of user making the topic from the token
   author: {
     type: Schema.Types.ObjectId,
-    ref: "User"
+    ref: "User",
+    required: true
   },
 
   //posts is populated to render posts when a user views a forum topic
