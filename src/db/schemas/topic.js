@@ -13,6 +13,16 @@ const topic_schema = Schema({
     }
   },
 
+  body : {
+    type: String,
+    required: true,
+    validate(value){
+      if (value.length === 0){
+        throw new Error('New topics must contain a body')
+      }
+    }
+  },
+
   date_created: {
     type: Date,
     default: Date.now

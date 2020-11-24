@@ -41,6 +41,7 @@ router.post('/user/register', async (req, res) => {
   }
 })
 
+
 router.post('/user/login', async (req, res) => {
 
   const user = await User.findOne({email: req.body.email});
@@ -63,6 +64,7 @@ router.post('/user/login', async (req, res) => {
 
 })
 
+//auth endpoint
 const upload = multer();
 router.post('/user/:id/avatar', upload.single('file'), async (req, res, next) => {
 
@@ -94,6 +96,7 @@ router.post('/user/:id/avatar', upload.single('file'), async (req, res, next) =>
   }
 })
 
+//auth endpoint
 router.post('/user/:id/signature', async (req, res) => {
 
   if(!req.body.token){
