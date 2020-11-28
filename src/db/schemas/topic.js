@@ -36,15 +36,23 @@ const topic_schema = Schema({
   //retrieve the id of user making the topic from the token
   author: {
     type: Schema.Types.ObjectId,
-    ref: "User",
-    required: true
-  },
+    ref: "User"
+  }
+  // },
+  //
+  // //posts is populated to render posts when a user views a forum topic
+  // posts: [{
+  //   type: Schema.Types.ObjectId,
+  //   ref: "Post"
+  // }]
+},
+  {toJSON: {virtuals: true}})
 
-  //posts is populated to render posts when a user views a forum topic
-  posts: [{
-    type: Schema.Types.ObjectId,
-    ref: "Post"
-  }]
+topic_schema.virtual('posts', {
+  ref: "Post",
+  localField: '_id',
+  foreignField: 'topic',
+  justOne: false
 })
 
 const Topic = mongoose.model('Topic', topic_schema );

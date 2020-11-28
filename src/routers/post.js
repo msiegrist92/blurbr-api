@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const Post = require('../db/schemas/post.js');
 
 const router = new express.Router();
@@ -48,15 +49,21 @@ router.get('/posts/:id/topic', async (req, res) => {
 
 //attach user id to new post creation using token
 //attach id of topic to body when making a new post
-router.post('/posts', async (req, res) => {
+router.post('/posts/:id', async (req, res) => {
   let data = req.body;
+  data.token = jwt.verify(data.token, process.env.JWT_SECRET)._id;
+
+  //id of request is the topic the post belongs to
+  //id from token is the author of the post
   const post = new Post({
-    body: data.body
+    body: data.body,
+    author: data.token,
+    topic: data.id
   })
 
   try {
     await post.save();
-    res.status(201).send();
+    res.status(201).send(post);
   } catch (error) {
     res.status(500).send(error);
   }
