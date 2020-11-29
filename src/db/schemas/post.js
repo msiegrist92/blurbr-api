@@ -32,6 +32,15 @@ const post_schema = Schema({
     type: Schema.Types.ObjectId,
     ref: "Topic"
   }
+},
+  {toJSON: {virtuals: true}}
+)
+
+post_schema.virtual('user', {
+  ref: "User",
+  localField: 'author',
+  foreignField: '_id',
+  justOne: true
 })
 
 const Post = mongoose.model("Post", post_schema);

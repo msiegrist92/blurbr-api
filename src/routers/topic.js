@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const Topic = require('../db/schemas/topic.js');
 const User = require('../db/schemas/user.js');
+const Post = require('../db/schemas/post.js');
 
 const router = new express.Router();
 
@@ -10,11 +11,23 @@ router.get('/topic/:id', async (req, res) => {
 
   try {
 
-    const topic = await Topic.findById(req.params.id).populate('posts');
-    const topic_author = await User.findById(topic.author);
+    //lean is used to make response JSON instead of mongoose doc schema
+    const topic = await Topic.findById(req.params.id).populate('posts').lean();
+    const posts = topic.posts;
+
+    //user data is added to matching post object
+    for(let post of posts){
+      await User.findById(post.author).lean().then((res) => {
+        post.user = res;
+      })
+    }
+
+    const topic_author = await User.findById(topic.author).lean();
+    topic.user = topic_author;
+
     const body = {
       topic,
-      topic_author
+      posts
     }
     if(topic === null){
       return res.status(400).send("Topic not found");
