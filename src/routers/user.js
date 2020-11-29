@@ -9,6 +9,7 @@ const pipeline = promisify(require('stream').pipeline);
 const jwt = require('jsonwebtoken');
 const User = require('../db/schemas/user.js');
 const Topic = require('../db/schemas/topic.js');
+const Post = require('../db/schemas/post.js');
 
 const router = new express.Router();
 
@@ -130,7 +131,8 @@ router.get('/user/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id).lean();
     const topics = await Topic.find({author: user._id}).lean();
-    console.log(topics);
+    const posts = await Post.find({author: user._id}).lean();
+    user.number_posts = posts.length + topics.length;
     user.topics = topics;
     console.log(user);
     if(user === null){
