@@ -8,6 +8,7 @@ const multer = require('multer');
 const pipeline = promisify(require('stream').pipeline);
 const jwt = require('jsonwebtoken');
 const User = require('../db/schemas/user.js');
+const Topic = require('../db/schemas/topic.js');
 
 const router = new express.Router();
 
@@ -127,8 +128,11 @@ router.get('/user/:id', async (req, res) => {
 
   //do not send back password in the endpoint
   try {
-    const user = await User.findById(req.params.id);
-
+    const user = await User.findById(req.params.id).lean();
+    const topics = await Topic.find({author: user._id}).lean();
+    console.log(topics);
+    user.topics = topics;
+    console.log(user);
     if(user === null){
       return res.status(400).send('User not found')
     } else {
@@ -138,6 +142,23 @@ router.get('/user/:id', async (req, res) => {
     return res.status(500).send(error)
   }
 
+})
+
+//route used for generating staticPaths in /users
+router.get('/users/paths', async (req, res) => {
+  try {
+    const users = await User.find({}).lean();
+    const ids = users.map((user) => {
+      return {
+        params : {
+          id : user._id
+        }
+      }
+    })
+    res.status(200).send(ids);
+  } catch (err) {
+    return res.status(500).send(error)
+  }
 })
 
 module.exports = router;
