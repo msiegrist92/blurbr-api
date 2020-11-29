@@ -53,10 +53,16 @@ router.get('/topic/:id/posts', async (req, res) => {
   }
 })
 
-//modular route to return x number of topics in -1 sort for creating a page
+//route which returns all topics for use in all topics home page of client
 router.get('/topic', async (req, res) => {;
   try {
-    const topics = await Topic.find({}).populate('author');
+    const topics = await Topic.find({}).populate('author').lean();
+    for (let topic of topics){
+      await Topic.findById(topic._id).populate('posts').lean().then((res) => {
+        topic.length = res.posts.length;
+      })
+    }
+    console.log(topics);
     res.status(200).send(topics);
   } catch (error) {
     console.log(error);
