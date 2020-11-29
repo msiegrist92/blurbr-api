@@ -2,18 +2,24 @@ const express = require('express');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const Topic = require('../db/schemas/topic.js');
+const User = require('../db/schemas/user.js');
 
 const router = new express.Router();
 
 router.get('/topic/:id', async (req, res) => {
 
   try {
-    const topic = await Topic.findById(req.params.id).populate('posts');
 
+    const topic = await Topic.findById(req.params.id).populate('posts');
+    const topic_author = await User.findById(topic.author);
+    const body = {
+      topic,
+      topic_author
+    }
     if(topic === null){
       return res.status(400).send("Topic not found");
     } else {
-      return res.status(200).send(topic);
+      return res.status(200).send(body);
     }
   } catch (error){
     return res.status(500).send(error);
