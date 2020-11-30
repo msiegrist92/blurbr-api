@@ -62,8 +62,8 @@ const user_schema = Schema({
   },
 
   avatar: {
-    data: Buffer,
-    type: String
+    type: String,
+    default: 'default.jpg'
   },
 
   topics : [{
