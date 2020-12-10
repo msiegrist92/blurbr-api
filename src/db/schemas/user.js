@@ -74,6 +74,11 @@ const user_schema = Schema({
   tokens: [{
     type: Schema.Types.ObjectId,
     ref: "Token"
+  }],
+
+  groups: [{
+    type: Schema.Types.ObjectId,
+    ref: "Group"
   }]
 
 })

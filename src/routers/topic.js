@@ -29,6 +29,9 @@ router.get('/topic/:id', async (req, res) => {
       topic,
       posts
     }
+
+    //this can be refactored return if null below topic declaration
+    //no else statement needed realyl
     if(topic === null){
       return res.status(400).send("Topic not found");
     } else {
