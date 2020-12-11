@@ -12,12 +12,14 @@ const post_router = require('./routers/post.js');
 const topic_router = require('./routers/topic.js');
 const uploads_router = require('./routers/uploads.js');
 const group_router = require('./routers/group.js');
+const user_topics_router = require('./routers/user_topics.js');
 
 app.use(user_router);
 app.use(post_router);
 app.use(topic_router);
 app.use(uploads_router);
 app.use(group_router);
+app.use(user_topics_router);
 
 const port = 2912 || process.env.PORT;
 
