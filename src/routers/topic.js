@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const Topic = require('../db/schemas/topic.js');
 const User = require('../db/schemas/user.js');
 const Post = require('../db/schemas/post.js');
+const Group = require('../db/schemas/group.js');
 
 const router = new express.Router();
 
@@ -89,6 +90,8 @@ router.get('/topic/:id/author', async (req, res) => {
 //attach user id to topic when creating new topic
 router.post('/topic', async (req, res) => {
 
+  console.log(req.body)
+
   if(!req.body.token){
     return res.status(403).send('Log in to create a topic')
   }
@@ -99,8 +102,17 @@ router.post('/topic', async (req, res) => {
   const topic = new Topic({
     title: req.body.title,
     body: req.body.body,
-    author
+    author,
+    group: req.body.group
   })
+
+  const group = await Group.findById(req.body.group);
+  group.topics.push(topic._id);
+  await group.save();
+
+  const user = await User.findById(author);
+  user.topics.push(topic._id);
+  await user.save();
 
   try {
     await topic.save();

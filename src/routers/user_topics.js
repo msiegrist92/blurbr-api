@@ -9,14 +9,38 @@ const Group = require('../db/schemas/group.js');
 const router = new express.Router();
 
 router.get('/user_topics/:id', async (req, res) => {
+
   try {
     const user = await User.findById(req.params.id);
-    console.log('user_groups', user.groups);
+
     const groups = user.groups;
-    for(let group of groups){
-      let user_group = await Group.findById(group);
-      console.log(user_group);
+    const topics = user.topics;
+
+    console.log(topics);
+
+    let user_groups = [];
+    for (let group of groups){
+      await Group.findById(group).then((res) => {
+        return user_groups.push(res);
+      })
     }
+
+    let user_topics = [];
+    for(let topic of topics){
+      await Topic.findById(topic).then((res) => {
+        return user_topics.push(res);
+      })
+    }
+
+    const data = {
+      user,
+      user_groups,
+      user_topics
+    }
+
+    console.log(data);
+
+    return res.status(200).send(data);
 
   } catch (err) {
     return res.status(500).send(err);
