@@ -16,20 +16,36 @@ router.get('/user_topics/:id', async (req, res) => {
     const groups = user.groups;
     const topics = user.topics;
 
-    console.log(topics);
-
     let user_groups = [];
     for (let group of groups){
-      await Group.findById(group).then((res) => {
+      await Group.findById(group).lean().then((res) => {
         return user_groups.push(res);
       })
     }
 
+
+    //attach username of topic creator to response
     let user_topics = [];
+
     for(let topic of topics){
-      await Topic.findById(topic).then((res) => {
+      await Topic.findById(topic).populate('posts').lean().then((res) => {
         return user_topics.push(res);
       })
+    }
+
+    for (let topic of user_topics){
+      await User.findById(topic.author).lean().then((res) => {
+        topic.author = res;
+      })
+    }
+
+    for(let topic of user_topics){
+      for(let user_group of user_groups){
+        console.log(typeof user_group._id, typeof topic.group)
+        if(user_group._id.equals(topic.group)){
+          topic.group = user_group;
+        }
+      }
     }
 
     const data = {
@@ -37,8 +53,6 @@ router.get('/user_topics/:id', async (req, res) => {
       user_groups,
       user_topics
     }
-
-    console.log(data);
 
     return res.status(200).send(data);
 
