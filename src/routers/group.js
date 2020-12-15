@@ -3,13 +3,32 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const Group = require('../db/schemas/group.js');
 const Topic = require('../db/schemas/topic.js');
-const User = require('../db/schemas/topic.js');
+const User = require('../db/schemas/user.js');
 
 const router = new express.Router();
 
 router.get('/groups', async (req, res) => {
+
+  //returns all group info for use in /groups
+  //attach owner username to info
+  //attach latest topic info
+  //attach user info
+
   try {
-    const groups = await Group.find({});
+    const groups = await Group.find({}).lean();
+
+    for(let group of groups){
+      await User.findById(group.owner).lean().then((res) => {
+        group.owner = res;
+      })
+    }
+    for(let group of groups){
+      await Topic.findById(group.topics[group.topics.length - 1]).lean().then((res) => {
+        group.most_recent = res;
+      })
+    }
+
+
     return res.status(200).send(groups);
   } catch (err){
     return res.status(500).send(err);
