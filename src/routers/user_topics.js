@@ -5,6 +5,7 @@ const Topic = require('../db/schemas/topic.js');
 const User = require('../db/schemas/user.js');
 const Post = require('../db/schemas/post.js');
 const Group = require('../db/schemas/group.js');
+const mongooseQueries = require('../lib/mongooseQueries.js');
 
 const router = new express.Router();
 
@@ -13,35 +14,21 @@ router.get('/user_topics/:id', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
 
+    //groups and topics contain array of IDs matching ref records
     const groups = user.groups;
     const topics = user.topics;
 
-    let user_groups = [];
-    for (let group of groups){
-      await Group.findById(group).lean().then((res) => {
-        return user_groups.push(res);
-      })
-    }
+    const user_groups = await mongooseQueries.populateByRefId(groups, Group);
+
+    const user_topics = await mongooseQueries.populateByRefIdWithVirtual(topics, Topic, 'posts');
+
+    await mongooseQueries.loopFindRefAndAttach(user_topics, User, 'author', 'author');
 
 
-    //attach username of topic creator to response
-    let user_topics = [];
-
-    for(let topic of topics){
-      await Topic.findById(topic).populate('posts').lean().then((res) => {
-        return user_topics.push(res);
-      })
-    }
-
-    for (let topic of user_topics){
-      await User.findById(topic.author).lean().then((res) => {
-        topic.author = res;
-      })
-    }
-
+    //adds correct group information to topic
     for(let topic of user_topics){
+      console.log(topic.group)
       for(let user_group of user_groups){
-        console.log(typeof user_group._id, typeof topic.group)
         if(user_group._id.equals(topic.group)){
           topic.group = user_group;
         }

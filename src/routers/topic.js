@@ -5,6 +5,7 @@ const Topic = require('../db/schemas/topic.js');
 const User = require('../db/schemas/user.js');
 const Post = require('../db/schemas/post.js');
 const Group = require('../db/schemas/group.js');
+const mongooseQueries = require('../lib/mongooseQueries');
 
 const router = new express.Router();
 
@@ -16,12 +17,7 @@ router.get('/topic/:id', async (req, res) => {
     const topic = await Topic.findById(req.params.id).populate('posts').lean();
     const posts = topic.posts;
 
-    //user data is added to matching post object
-    for(let post of posts){
-      await User.findById(post.author).lean().then((res) => {
-        post.user = res;
-      })
-    }
+    await mongooseQueries.loopFindRefAndAttach(posts, User, 'author', 'user')
 
     const topic_author = await User.findById(topic.author).lean();
     topic.user = topic_author;
