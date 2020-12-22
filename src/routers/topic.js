@@ -9,6 +9,15 @@ const mongooseQueries = require('../lib/mongooseQueries');
 
 const router = new express.Router();
 
+router.get('/topics', async (req, res) => {
+  try {
+    const topics = await Topic.find({}).lean()
+    return res.status(200).send(topics);
+  } catch (err){
+    return res.status(500).send(err);
+  }
+})
+
 router.get('/topic/:id', async (req, res) => {
 
   try {
