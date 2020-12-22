@@ -10,11 +10,6 @@ const router = new express.Router();
 
 router.get('/groups', async (req, res) => {
 
-  //returns all group info for use in /groups
-  //attach owner username to info
-  //attach latest topic info
-  //attach user info
-
   try {
     const groups = await Group.find({}).lean();
 
