@@ -20,6 +20,7 @@ const user_schema = Schema({
   },
 
   password: {
+    select: false,
     type: String,
     required: true,
     trim: true,

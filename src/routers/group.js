@@ -26,10 +26,14 @@ router.get('/groups', async (req, res) => {
 
 router.get('/group/:id', async (req, res) => {
   try {
-    const group = await Group.findById(req.params.id);
+    const group = await Group.findById(req.params.id).lean();
     if(group === null){
       return res.status(400).send("Group not found");
     } else {
+
+      await mongooseQueries.loopFindRefAndAttach(group, User, 'owner', 'owner');
+      group.topics = await mongooseQueries.populateByRefId(group.topics, Topic)
+      group.users = await mongooseQueries.populateByRefId(group.users, User);
       return res.status(200).send(group);
     }
   } catch (err){

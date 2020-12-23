@@ -1,10 +1,19 @@
 const loopFindRefAndAttach = async (base_object, schema_to_search, ref_id_key, attach_key) => {
 
+  if(!base_object.length){
+    console.log('in here')
+    await schema_to_search.findById(base_object[ref_id_key]).lean().then((res) => {
+      console.log(res)
+      base_object[attach_key] = res;
+    })
+  }
+  else {
     for(let doc of base_object){
       await schema_to_search.findById(doc[ref_id_key]).lean().then((res) => {
         doc[attach_key] = res;
       })
     }
+  }
 }
 
 const loopFindRefLastIndexAndAttach = async (base_object, schema_to_search, ref_id_key, attach_key) => {
@@ -36,6 +45,9 @@ const populateByRefIdWithVirtual = async (ref_ids, schema_to_search, virtual_nam
   }
   return array;
 }
+
+
+
 
 
 module.exports = {
