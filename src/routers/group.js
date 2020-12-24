@@ -4,7 +4,9 @@ const jwt = require('jsonwebtoken');
 const Group = require('../db/schemas/group.js');
 const Topic = require('../db/schemas/topic.js');
 const User = require('../db/schemas/user.js');
+const Token = require('../db/schemas/token.js');
 const mongooseQueries = require('../lib/mongooseQueries');
+const mailgun = require('mailgun-js');
 
 const router = new express.Router();
 
@@ -69,5 +71,33 @@ router.post('/group', async (req, res) => {
     res.status(500).send(erro);
   }
 })
+
+router.post('/group/joinrequest/:token', async (req, res) => {
+  console.log(req.params.token)
+
+  const token = Token.findOne({token: req.params.token});
+  if(!token){
+    return res.status(403).send("You must log in to request a group");
+  }
+
+  const user_id = jwt.verify(req.params.token, process.env.JWT_SECRET)._id;
+
+  const domain = 'sandbox5da1889582d94201a8cdecedb7a36b1d.mailgun.org';
+  const mg = mailgun({apiKey: process.env.MAILGUN_KEY, domain});
+  const data = {
+    from : "Blurbr Groups <groups@blurbr.com>",
+    to: 'm.siegrist92@gmail.com',
+    subject: "Good ol' Mailgun Test",
+    text: "Testing testing 1 2"
+  };
+  mg.messages().send(data, (err, body) => {
+    console.log(body)
+  })
+  return res.status(200).send('Email sent')
+
+
+})
+
+
 
 module.exports = router;

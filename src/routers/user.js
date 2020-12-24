@@ -10,6 +10,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../db/schemas/user.js');
 const Topic = require('../db/schemas/topic.js');
 const Post = require('../db/schemas/post.js');
+const Token = require('../db/schemas/token.js');
 
 const router = new express.Router();
 
@@ -169,6 +170,18 @@ router.get('/users', async (req, res) => {
     res.status(200).send(users);
   } catch (err) {
     res.status(500).send(err);
+  }
+})
+
+router.post('/users/logout', async(req, res) => {
+  //alwayus log out of all sessions
+  console.log(req.body.token)
+  try {
+    const token = await Token.findOneAndDelete({token: req.body.token});
+    console.log(token)
+    return res.status(200).send()
+  } catch (err){
+    return res.status(500).send(err);
   }
 })
 
