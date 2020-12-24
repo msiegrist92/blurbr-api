@@ -20,6 +20,7 @@ const user_schema = Schema({
   },
 
   password: {
+    select: false,
     type: String,
     required: true,
     trim: true,
@@ -74,6 +75,11 @@ const user_schema = Schema({
   tokens: [{
     type: Schema.Types.ObjectId,
     ref: "Token"
+  }],
+
+  groups: [{
+    type: Schema.Types.ObjectId,
+    ref: "Group"
   }]
 
 })

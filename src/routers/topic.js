@@ -4,8 +4,19 @@ const jwt = require('jsonwebtoken');
 const Topic = require('../db/schemas/topic.js');
 const User = require('../db/schemas/user.js');
 const Post = require('../db/schemas/post.js');
+const Group = require('../db/schemas/group.js');
+const mongooseQueries = require('../lib/mongooseQueries');
 
 const router = new express.Router();
+
+router.get('/topics', async (req, res) => {
+  try {
+    const topics = await Topic.find({}).lean()
+    return res.status(200).send(topics);
+  } catch (err){
+    return res.status(500).send(err);
+  }
+})
 
 router.get('/topic/:id', async (req, res) => {
 
@@ -15,12 +26,7 @@ router.get('/topic/:id', async (req, res) => {
     const topic = await Topic.findById(req.params.id).populate('posts').lean();
     const posts = topic.posts;
 
-    //user data is added to matching post object
-    for(let post of posts){
-      await User.findById(post.author).lean().then((res) => {
-        post.user = res;
-      })
-    }
+    await mongooseQueries.loopFindRefAndAttach(posts, User, 'author', 'user')
 
     const topic_author = await User.findById(topic.author).lean();
     topic.user = topic_author;
@@ -29,6 +35,9 @@ router.get('/topic/:id', async (req, res) => {
       topic,
       posts
     }
+
+    //this can be refactored return if null below topic declaration
+    //no else statement needed realyl
     if(topic === null){
       return res.status(400).send("Topic not found");
     } else {
@@ -86,6 +95,8 @@ router.get('/topic/:id/author', async (req, res) => {
 //attach user id to topic when creating new topic
 router.post('/topic', async (req, res) => {
 
+  console.log(req.body)
+
   if(!req.body.token){
     return res.status(403).send('Log in to create a topic')
   }
@@ -96,8 +107,17 @@ router.post('/topic', async (req, res) => {
   const topic = new Topic({
     title: req.body.title,
     body: req.body.body,
-    author
+    author,
+    group: req.body.group
   })
+
+  const group = await Group.findById(req.body.group);
+  group.topics.push(topic._id);
+  await group.save();
+
+  const user = await User.findById(author);
+  user.topics.push(topic._id);
+  await user.save();
 
   try {
     await topic.save();

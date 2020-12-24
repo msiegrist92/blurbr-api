@@ -37,6 +37,12 @@ const topic_schema = Schema({
   author: {
     type: Schema.Types.ObjectId,
     ref: "User"
+  },
+
+  group : {
+    type: Schema.Types.ObjectId,
+    ref: "Group",
+    required: true
   }
   // },
   //
