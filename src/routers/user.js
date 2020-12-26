@@ -7,10 +7,12 @@ const path = require('path');
 const multer = require('multer');
 const pipeline = promisify(require('stream').pipeline);
 const jwt = require('jsonwebtoken');
+const mongooseQueries = require('../lib/mongooseQueries.js');
 const User = require('../db/schemas/user.js');
 const Topic = require('../db/schemas/topic.js');
 const Post = require('../db/schemas/post.js');
 const Token = require('../db/schemas/token.js');
+const Group = require('../db/schemas/group.js');
 
 const router = new express.Router();
 
@@ -135,6 +137,7 @@ router.get('/user/:id', async (req, res) => {
     const posts = await Post.find({author: user._id}).lean();
     user.number_posts = posts.length + topics.length;
     user.topics = topics;
+    user.groups = await mongooseQueries.populateByRefId(user.groups, Group);
     console.log(user);
     if(user === null){
       return res.status(400).send('User not found')
