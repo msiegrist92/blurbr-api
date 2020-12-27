@@ -98,9 +98,7 @@ router.post('/group/joinrequest/:token', async (req, res) => {
   const approve_token = jwt.sign({user_id, group_id}, process.env.JWT_GROUP_KEY);
 
   const user_url = 'http://' + process.env.CLIENT_URL + '/users/' + user._id;
-  console.log(user_url)
   const approve_url = 'http://' + process.env.API_URL + '/group/approvereq/' + approve_token;
-  console.log(user_url)
 
   const domain = 'sandbox5da1889582d94201a8cdecedb7a36b1d.mailgun.org';
   const mg = mailgun({apiKey: process.env.MAILGUN_KEY, domain});
@@ -119,6 +117,52 @@ router.post('/group/joinrequest/:token', async (req, res) => {
   })
   return res.status(200).send('Email sent')
 
+})
+
+router.post('/group/inviteuser/:token', async (req, res) => {
+
+  const token = req.params.token;
+
+  const {user_email, group} = req.body;
+
+  let owner_id = jwt.verify(token, process.env.JWT_SECRET)._id;
+
+  const owner = await User.findById(owner_id);
+  const user = await User.findOne({email: user_email});
+
+  //make sure request is coming from the owner of the group
+  const owned_group = await Group.findOne({owner: owner_id});
+  if(!owned_group){
+    return res.status(403).send()
+  }
+
+  const group_url = `http://${process.env.CLIENT_URL}/groups/${owned_group._id}`;
+  console.log(group_url)
+
+  const approve_token = jwt.sign({user_id: user._id, group_id: owned_group._id}, process.env.JWT_GROUP_KEY);
+
+  const approve_url = 'http://' + process.env.API_URL + '/group/approvereq/' + approve_token;
+
+
+    const domain = 'sandbox5da1889582d94201a8cdecedb7a36b1d.mailgun.org';
+    const mg = mailgun({apiKey: process.env.MAILGUN_KEY, domain});
+    const data = {
+      from : "Blurbr Groups <groups@blurbr.com>",
+      to: 'm.siegrist92@gmail.com',
+      subject: `Blurbr User ${owner.username} invites you to join their group ${owned_group.name}`,
+      html: `<html><body><p>Hello there ${user.username} - ${owner.username} invites you to join their group!</p>
+        <button><a href="${group_url}">View Group</a></button>
+        <button><a href="${approve_url}">Join Group</a></button>
+        </body>
+        </html> `
+    };
+    mg.messages().send(data, (err, body) => {
+      console.log(body)
+    })
+
+
+  console.log(user_email, group);
+  return res.status(200).send('Invite sent')
 })
 
 router.get('/group/approvereq/:token', async (req, res) => {

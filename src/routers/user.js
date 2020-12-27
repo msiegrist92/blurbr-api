@@ -177,11 +177,15 @@ router.get('/users', async (req, res) => {
   }
 })
 
-router.get('/users/me/:token', async (req, res) => {
+router.get('/users/own_groups/:token', async (req, res) => {
   const token = req.params.token;
   const user_id = jwt.verify(token, process.env.JWT_SECRET);
-  const user = await User.findById(user_id);
-  console.log(user);
+  const user = await User.findById(user_id).lean();
+
+  const groups = await Group.find({owner: user_id}).lean();
+
+  user.groups_owned = groups;
+
   if(!user){
     res.status(400).send();
   }

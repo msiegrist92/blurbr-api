@@ -29,7 +29,9 @@ const populateByRefId = async (ref_ids, schema_to_search) => {
   let array = [];
   for (let id of ref_ids){
     await schema_to_search.findById(id).lean().then((res) => {
-      array.push(res);
+      if(res != null){
+        array.push(res);
+      }
     })
   }
   return array;
