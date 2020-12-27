@@ -55,20 +55,25 @@ router.post('/group', async (req, res) => {
     return res.status(403).send("Log in to create a new group")
   }
 
-  const owner = jwt.verify(req.body.token, process.env.JWT_SECRET)._id;
-
-  const group = new Group({
-    name: req.body.name,
-    owner,
-    users: [owner],
-    topics: []
-  })
 
   try {
+    const owner_id = jwt.verify(req.body.token, process.env.JWT_SECRET)._id;
+
+    const group = new Group({
+      name: req.body.name,
+      owner: owner_id,
+      description: req.body.description,
+      users: [owner_id],
+      topics: []
+    })
+    const owner = await User.findById(owner_id);
+    owner.groups.push(group._id);
+    console.log(owner, group)
     await group.save();
+    await owner.save();
     res.status(201).send(group);
   } catch (err){
-    res.status(500).send(erro);
+    res.status(500).send(err);
   }
 })
 

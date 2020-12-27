@@ -128,6 +128,7 @@ router.post('/user/:id/signature', async (req, res) => {
   }
 })
 
+//this gets a fuckload more data than is needed in some cases
 router.get('/user/:id', async (req, res) => {
 
   //do not send back password in the endpoint
@@ -176,6 +177,18 @@ router.get('/users', async (req, res) => {
   }
 })
 
+router.get('/users/me/:token', async (req, res) => {
+  const token = req.params.token;
+  const user_id = jwt.verify(token, process.env.JWT_SECRET);
+  const user = await User.findById(user_id);
+  console.log(user);
+  if(!user){
+    res.status(400).send();
+  }
+
+  return res.status(200).send(user);
+})
+
 router.post('/users/logout', async(req, res) => {
   //alwayus log out of all sessions
   console.log(req.body.token)
@@ -186,6 +199,29 @@ router.post('/users/logout', async(req, res) => {
   } catch (err){
     return res.status(500).send(err);
   }
+})
+
+router.get('/users/searchby/:option/:term', async (req, res) => {
+
+  const {option, term} = req.params;
+  const accepted_options = ['email', 'username'];
+
+  if(!accepted_options.includes(option)){
+    return res.status(400).send("Invalid search term");
+  }
+
+  const results = await User.find({[option]: term}).lean();
+  for(let user of results){
+    user.posts = await Post.countDocuments({author: user._id});
+  }
+
+  if(results.length === 0){
+    return res.status(400).send("No users found");
+  }
+
+  return res.status(200).send(results);
+
+
 })
 
 module.exports = router;
