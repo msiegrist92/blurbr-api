@@ -12,11 +12,12 @@ const router = new express.Router();
 router.get('/user_topics/:id', async (req, res) => {
 
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).lean();
 
     //groups and topics contain array of IDs matching ref records
     const groups = user.groups;
     const topics = user.topics;
+
 
     const user_groups = await mongooseQueries.populateByRefId(groups, Group);
 
