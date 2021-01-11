@@ -6,6 +6,8 @@ const Topic = require('../db/schemas/topic.js');
 const User = require('../db/schemas/user.js');
 const Token = require('../db/schemas/token.js');
 const mongooseQueries = require('../lib/mongooseQueries');
+const arrayControls = require('../lib/arrayControls');
+const validateOwner = require('../lib/validateOwner');
 const mailgun = require('mailgun-js');
 
 const router = new express.Router();
@@ -43,12 +45,7 @@ router.get('/group/:id', async (req, res) => {
   }
 })
 
-//get topics for group router
 
-
-//get users for group router
-
-//post new group router
 router.post('/group', async (req, res) => {
 
   if(!req.body.token){
@@ -68,7 +65,7 @@ router.post('/group', async (req, res) => {
     })
     const owner = await User.findById(owner_id);
     owner.groups.push(group._id);
-    console.log(owner, group)
+
     await group.save();
     await owner.save();
     res.status(201).send(group);
@@ -90,7 +87,6 @@ router.post('/group/joinrequest/:token', async (req, res) => {
 
   const owner = await User.findById(group.owner);
 
-  console.log(user, group, owner)
 
   if(user === null || group === null || owner === null){
     return res.status(403).send()
@@ -131,13 +127,12 @@ router.post('/group/inviteuser/:token', async (req, res) => {
   const user = await User.findOne({email: user_email});
 
   //make sure request is coming from the owner of the group
-  const owned_group = await Group.findOne({owner: owner_id});
-  if(!owned_group){
+  const owned_group = await Group.findById(group);
+  if(!owned_group.owner === user._id){
     return res.status(403).send()
   }
 
   const group_url = `http://${process.env.CLIENT_URL}/groups/${owned_group._id}`;
-  console.log(group_url)
 
   const approve_token = jwt.sign({user_id: user._id, group_id: owned_group._id}, process.env.JWT_GROUP_KEY);
 
@@ -171,6 +166,7 @@ router.get('/group/approvereq/:token', async (req, res) => {
 
   const {user_id, group_id} = token_decode;
 
+
   const user = await User.findById(user_id);
   const group = await Group.findById(group_id);
 
@@ -186,6 +182,8 @@ router.get('/group/approvereq/:token', async (req, res) => {
 
   group.users.push(user._id);
   await group.save();
+  user.groups.push(group._id);
+  await user.save();
 
   return res.send('User approved!')
 
@@ -194,42 +192,38 @@ router.get('/group/approvereq/:token', async (req, res) => {
 router.post('/group/removeusers', async (req, res) => {
 
 
-  const {selections} = req.body;
-  const {group_id} = req.body;
+  const {selections, group_id, user_token} = req.body;
+
 
   const group = await Group.findById(group_id);
 
-  let current_members = [];
-  group.users.forEach((user) => {
-    current_members = [...current_members, user.toString()]
-  })
+  if(!validateOwner.isGroupOwner(group, user_token)){
+    return res.status(403).send();
+  }
 
-  const new_members = current_members.filter((member) => {
-    return !selections.includes(member);
-  })
+  const current_members = arrayControls.objIDToString(group.users)
 
-  console.log(group.users);
+  const new_members = arrayControls.removeSelections(selections, current_members);
+
   group.users = new_members;
-  console.log(group.users)
-  await Group.save();
+  await group.save();
 
   return res.status(200).send('Users removed');
 })
 
 router.post('/group/removetopics', async (req, res) => {
 
-  const {selections, group_id} = req.body;
+  const {selections, group_id, user_token} = req.body;
 
   const group = await Group.findById(group_id);
 
-  let current_topics = [];
-  group.topics.forEach((topic) => {
-    current_topics = [...current_topics, topic.toString()]
-  })
+  if(!validateOwner.isGroupOwner(group, user_token)){
+    return res.staus(403).send()
+  }
 
-  const new_topics = current_topics.filter((topic) => {
-    return !selections.includes(topic);
-  })
+  const current_topics = arrayControls.objIDToString(group.topics)
+
+  const new_topics = arrayControls.removeSelections(selections, current_topics);
 
   group.topics = new_topics;
   await group.save();
@@ -240,18 +234,35 @@ router.post('/group/removetopics', async (req, res) => {
 router.post('/group/disbandgroup', async (req, res) => {
   const {group_id, user_token} = req.body;
 
-  console.log(group_id, user_token);
 
   const group = await Group.findById(group_id);
 
   const user_id = jwt.verify(user_token, process.env.JWT_SECRET)._id;
 
-  //add this check to all group_manage endpoints
-  if(user_id !== group.owner.toString()){
+
+  if(!validateOwner.isGroupOwner(group, user_token)){
     return res.status(403).send();
   }
 
+  //delete all topics belonging to group
+  const topics = await Topic.find({group: group_id});
+  for(let topic of topics){
+    topic.remove();
+  }
+
+  //remove group from all users' groups array
+  const users = await User.find({groups: group_id});
+  for(let user of users){
+    let new_array = user.groups.filter((group) => {
+      return group.toString() !== group_id
+    })
+    user.groups = new_array;
+    await user.save();
+  }
+
+
   await group.remove();
+
 
   return res.status(200).send();
 
