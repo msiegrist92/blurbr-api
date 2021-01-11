@@ -191,5 +191,70 @@ router.get('/group/approvereq/:token', async (req, res) => {
 
 })
 
+router.post('/group/removeusers', async (req, res) => {
+
+
+  const {selections} = req.body;
+  const {group_id} = req.body;
+
+  const group = await Group.findById(group_id);
+
+  let current_members = [];
+  group.users.forEach((user) => {
+    current_members = [...current_members, user.toString()]
+  })
+
+  const new_members = current_members.filter((member) => {
+    return !selections.includes(member);
+  })
+
+  console.log(group.users);
+  group.users = new_members;
+  console.log(group.users)
+  await Group.save();
+
+  return res.status(200).send('Users removed');
+})
+
+router.post('/group/removetopics', async (req, res) => {
+
+  const {selections, group_id} = req.body;
+
+  const group = await Group.findById(group_id);
+
+  let current_topics = [];
+  group.topics.forEach((topic) => {
+    current_topics = [...current_topics, topic.toString()]
+  })
+
+  const new_topics = current_topics.filter((topic) => {
+    return !selections.includes(topic);
+  })
+
+  group.topics = new_topics;
+  await group.save();
+
+  return res.status(200).send('Topics removed')
+})
+
+router.post('/group/disbandgroup', async (req, res) => {
+  const {group_id, user_token} = req.body;
+
+  console.log(group_id, user_token);
+
+  const group = await Group.findById(group_id);
+
+  const user_id = jwt.verify(user_token, process.env.JWT_SECRET)._id;
+
+  //add this check to all group_manage endpoints
+  if(user_id !== group.owner.toString()){
+    return res.status(403).send();
+  }
+
+  await group.remove();
+
+  return res.status(200).send();
+
+})
 
 module.exports = router;
