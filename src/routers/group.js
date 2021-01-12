@@ -246,6 +246,9 @@ router.post('/group/disbandgroup', async (req, res) => {
 
   //delete all topics belonging to group
   const topics = await Topic.find({group: group_id});
+  const topic_ids = topics.map((topic) => {
+    return topic._id.toString();
+  })
   for(let topic of topics){
     topic.remove();
   }
@@ -257,6 +260,16 @@ router.post('/group/disbandgroup', async (req, res) => {
       return group.toString() !== group_id
     })
     user.groups = new_array;
+    await user.save();
+  }
+
+  //remove all topics with group id from members topics array
+  console.log(users, topic_ids)
+  for(let user of users){
+    let new_array = user.topics.filter((topic) => {
+      return !topic_ids.includes(topic.toString())
+    })
+    user.topics = new_array;
     await user.save();
   }
 
