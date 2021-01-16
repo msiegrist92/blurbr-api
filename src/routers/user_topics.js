@@ -66,7 +66,6 @@ router.get('/member_topics/:id', async (req, res) => {
       }
     }
 
-    console.log(all_topics)
     const user_groups = await mongooseQueries.populateByRefId(groups, Group);
     const member_topics = await mongooseQueries.populateByRefIdWithVirtual(all_topics, Topic, 'posts')
 

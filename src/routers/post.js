@@ -50,15 +50,18 @@ router.get('/posts/:id/topic', async (req, res) => {
 //attach user id to new post creation using token
 //attach id of topic to body when making a new post
 router.post('/posts/:id', async (req, res) => {
-  let data = req.body;
-  data.token = jwt.verify(data.token, process.env.JWT_SECRET)._id;
+
+  const {body, token, id} = req.body;
+  console.log(body, token, id)
+
+  const author = jwt.verify(token, process.env.JWT_SECRET)._id;
 
   //id of request is the topic the post belongs to
   //id from token is the author of the post
   const post = new Post({
-    body: data.body,
-    author: data.token,
-    topic: data.id
+    body,
+    author,
+    topic: id
   })
 
   try {

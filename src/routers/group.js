@@ -234,7 +234,6 @@ router.post('/group/removetopics', async (req, res) => {
 router.post('/group/disbandgroup', async (req, res) => {
   const {group_id, user_token} = req.body;
 
-
   const group = await Group.findById(group_id);
 
   const user_id = jwt.verify(user_token, process.env.JWT_SECRET)._id;
@@ -264,7 +263,6 @@ router.post('/group/disbandgroup', async (req, res) => {
   }
 
   //remove all topics with group id from members topics array
-  console.log(users, topic_ids)
   for(let user of users){
     let new_array = user.topics.filter((topic) => {
       return !topic_ids.includes(topic.toString())
@@ -275,10 +273,7 @@ router.post('/group/disbandgroup', async (req, res) => {
 
 
   await group.remove();
-
-
   return res.status(200).send();
-
 })
 
 module.exports = router;

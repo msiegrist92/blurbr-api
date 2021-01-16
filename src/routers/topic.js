@@ -28,6 +28,7 @@ router.get('/topic/:id', async (req, res) => {
 
     await mongooseQueries.loopFindRefAndAttach(posts, User, 'author', 'user')
 
+    //attach user document to JSON res
     const topic_author = await User.findById(topic.author).lean();
     topic.user = topic_author;
 
@@ -35,28 +36,20 @@ router.get('/topic/:id', async (req, res) => {
       topic,
       posts
     }
+    return res.status(200).send(body);
 
-    //this can be refactored return if null below topic declaration
-    //no else statement needed realyl
-    if(topic === null){
-      return res.status(400).send("Topic not found");
-    } else {
-      return res.status(200).send(body);
-    }
   } catch (error){
     return res.status(500).send(error);
   }
 })
 
 router.get('/topic/:id/posts', async (req, res) => {
+  //mongoose enforces object id verify so will error before return null
   try {
     const topic = await Topic.findById(req.params.id).populate('posts');
-    console.log(topic);
-    if(topic === null){
-      return res.status(400).send("Bad request");
-    } else {
-      return res.status(200).send(topic);
-    }
+    //does this not catch on error??
+    return res.status(200).send(topic);
+
   } catch (error) {
     return res.status(500).send(error);
   }
@@ -66,12 +59,12 @@ router.get('/topic/:id/posts', async (req, res) => {
 router.get('/topic', async (req, res) => {;
   try {
     const topics = await Topic.find({}).populate('author').lean();
+    //this can be replaced with a mongooseQueries method
     for (let topic of topics){
       await Topic.findById(topic._id).populate('posts').lean().then((res) => {
         topic.length = res.posts.length;
       })
     }
-    console.log(topics);
     res.status(200).send(topics);
   } catch (error) {
     console.log(error);
