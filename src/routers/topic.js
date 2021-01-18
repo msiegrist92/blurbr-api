@@ -67,7 +67,6 @@ router.get('/topic', async (req, res) => {;
     }
     res.status(200).send(topics);
   } catch (error) {
-    console.log(error);
     res.status(500).send(error);
   }
 })
@@ -75,11 +74,9 @@ router.get('/topic', async (req, res) => {;
 router.get('/topic/:id/author', async (req, res) => {
   try {
     const topic = await Topic.findById(req.params.id).populate('author');
-    if (topic === null){
-      return res.status(400).send("Bad request");
-    } else {
-      return res.status(200).send(topic);
-    }
+
+    return res.status(200).send(topic);
+
   } catch (error) {
     return res.status(500).send(error);
   }
@@ -88,31 +85,31 @@ router.get('/topic/:id/author', async (req, res) => {
 //attach user id to topic when creating new topic
 router.post('/topic', async (req, res) => {
 
-  console.log(req.body)
+  const {title, body, group, token} = req.body;
 
-  if(!req.body.token){
+  if(!token){
     return res.status(403).send('Log in to create a topic')
   }
 
-  //decode token to retrieve ID of user creating the new topic
-  const author = jwt.verify(req.body.token, process.env.JWT_SECRET)._id;
-
-  const topic = new Topic({
-    title: req.body.title,
-    body: req.body.body,
-    author,
-    group: req.body.group
-  })
-
-  const group = await Group.findById(req.body.group);
-  group.topics.push(topic._id);
-  await group.save();
-
-  const user = await User.findById(author);
-  user.topics.push(topic._id);
-  await user.save();
-
   try {
+
+    const author = jwt.verify(token, process.env.JWT_SECRET)._id;
+
+    const topic = new Topic({
+      title,
+      body,
+      author,
+      group
+    });
+
+    const group_db = await Group.findById(group);
+    group_db.topics.push(topic._id);
+    await group_db.save();
+
+    const user = await User.findById(author);
+    user.topics.push(topic._id);
+    await user.save();
+
     await topic.save();
     res.status(201).send(topic);
   } catch (error){

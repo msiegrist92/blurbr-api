@@ -52,7 +52,6 @@ router.get('/posts/:id/topic', async (req, res) => {
 router.post('/posts/:id', async (req, res) => {
 
   const {body, token, id} = req.body;
-  console.log(body, token, id)
 
   const author = jwt.verify(token, process.env.JWT_SECRET)._id;
 

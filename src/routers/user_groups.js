@@ -23,8 +23,6 @@ router.get('/user_groups/:id', async (req, res) => {
 
     await mongooseQueries.loopFindRefLastIndexAndAttach(groups, Topic, 'topics', 'most_recent');
 
-    console.log(groups);
-
     return res.status(200).send(groups);
 
   } catch (err) {
@@ -45,8 +43,6 @@ router.get('/member_groups/:id', async (req, res) => {
     await mongooseQueries.loopFindRefAndAttach(groups, User, 'owner', 'owner');
 
     await mongooseQueries.loopFindRefLastIndexAndAttach(groups, Topic, 'topics', 'most_recent');
-
-    console.log(groups);
 
     return res.status(200).send(groups);
 

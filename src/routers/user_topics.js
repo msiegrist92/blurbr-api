@@ -18,8 +18,7 @@ router.get('/user_topics/:id', async (req, res) => {
     const user = await User.findById(req.params.id).lean();
 
     //groups and topics contain array of IDs matching ref records
-    const groups = user.groups;
-    const topics = user.topics;
+    const {groups, topics} = user;
 
     const user_groups = await mongooseQueries.populateByRefId(groups, Group);
 
@@ -27,14 +26,7 @@ router.get('/user_topics/:id', async (req, res) => {
 
     await mongooseQueries.loopFindRefAndAttach(user_topics, User, 'author', 'author');
 
-    //adds correct group information to topic
-    for(let topic of user_topics){
-      for(let user_group of user_groups){
-        if(user_group._id.equals(topic.group)){
-          topic.group = user_group;
-        }
-      }
-    }
+    await mongooseQueries.loopFindRefAndAttach(user_topics, Group, 'group', 'group');
 
     const data = {
       user_groups,
@@ -71,15 +63,8 @@ router.get('/member_topics/:id', async (req, res) => {
 
     await mongooseQueries.loopFindRefAndAttach(member_topics, User, 'author', 'author');
 
+    await mongooseQueries.loopFindRefAndAttach(member_topics, Group, 'group', 'group');
 
-        //adds correct group information to topic
-        for(let topic of member_topics){
-          for(let user_group of user_groups){
-            if(user_group._id.equals(topic.group)){
-              topic.group = user_group;
-            }
-          }
-        }
 
     const data = {
       member_topics,
