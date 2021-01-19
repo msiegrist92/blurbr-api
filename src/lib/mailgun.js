@@ -4,7 +4,7 @@ const mailgun = require('mailgun-js');
 const sendJoinReq = (user, group, owner, approve_token) => {
 
   const user_url = 'http://' + process.env.CLIENT_URL + '/users/' + user._id;
-  const approve_url = 'http://' + process.env.API_URL + '/group/approvereq/' + approve_token;
+  const approve_url = 'http://' + process.env.API_URL + '/groupmgmt/approvereq/' + approve_token;
   const mg = mailgun({apiKey: process.env.MAILGUN_KEY, domain: process.env.MG_DOMAIN})
 
   const data = {
@@ -26,7 +26,7 @@ const sendJoinReq = (user, group, owner, approve_token) => {
 const sendGroupInvite = (user, owner, owned_group, approve_token) => {
 
   const group_url = `http://${process.env.CLIENT_URL}/groups/${owned_group._id}`;
-  const approve_url = 'http://' + process.env.API_URL + '/group/approvereq/' + approve_token;
+  const approve_url = 'http://' + process.env.API_URL + '/groupmgmt/approvereq/' + approve_token;
   const mg = mailgun({apiKey: process.env.MAILGUN_KEY, domain: process.env.MG_DOMAIN});
 
   const data = {
