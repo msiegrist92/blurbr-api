@@ -1,11 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const postAuth = require('../lib/postAuth');
+const getAuth = require('../lib/getAuth');
 const Post = require('../db/schemas/post.js');
 
 const router = new express.Router();
 
-router.get('/posts/:id', async (req, res) => {
+router.get('/posts/:id', getAuth, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
 
@@ -19,7 +21,7 @@ router.get('/posts/:id', async (req, res) => {
   }
 })
 
-router.get('/posts/:id/author', async (req,res) => {
+router.get('/posts/:id/author', getAuth, async (req,res) => {
   try {
     const post = await Post.findById(req.params.id);
 
@@ -33,7 +35,7 @@ router.get('/posts/:id/author', async (req,res) => {
   }
 })
 
-router.get('/posts/:id/topic', async (req, res) => {
+router.get('/posts/:id/topic', getAuth, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id).populate('topic');
 
@@ -49,7 +51,7 @@ router.get('/posts/:id/topic', async (req, res) => {
 
 //attach user id to new post creation using token
 //attach id of topic to body when making a new post
-router.post('/posts/:id', async (req, res) => {
+router.post('/posts/:id', postAuth, async (req, res) => {
 
   const {body, token, id} = req.body;
 

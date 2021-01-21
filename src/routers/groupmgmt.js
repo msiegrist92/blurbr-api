@@ -5,6 +5,9 @@
  const User = require('../db/schemas/user');
  const Group = require('../db/schemas/group');
 
+ const postAuth = require('../lib/postAuth');
+ const getAuth = require('../lib/getAuth');
+
  const arrayControls = require('../lib/arrayControls');
  const validateOwner = require('../lib/validateOwner');
  const mailgunFuncs = require('../lib/mailgun');
@@ -14,7 +17,7 @@
  const router = new express.Router();
 
  //this endpoint receives user and group id from token and sends email to group owner
- router.post('/groupmgmt/joinrequest/:token', async (req, res) => {
+ router.post('/groupmgmt/joinrequest/:token', postAuth, async (req, res) => {
 
 
    const token_decode = jwt.verify(req.params.token, process.env.JWT_SECRET);
@@ -37,7 +40,7 @@
    return res.status(200).send("Email sent")
  })
 
- router.post('/groupmgmt/inviteuser/:token', async (req, res) => {
+ router.post('/groupmgmt/inviteuser/:token', postAuth, async (req, res) => {
 
    const token = req.params.token;
 
@@ -47,6 +50,10 @@
 
    const owner = await User.findById(owner_id);
    const user = await User.findOne({email: user_email});
+
+   if(owner === null || user === null){
+     return res.status(400).send();
+   }
 
    //make sure request is coming from the owner of the group
    const owned_group = await Group.findById(group);
@@ -89,7 +96,7 @@
 
  })
 
- router.post('/groupmgmt/removeusers', async (req, res) => {
+ router.post('/groupmgmt/removeusers', postAuth, async (req, res) => {
 
 
    const {selections, group_id, user_token} = req.body;
@@ -111,7 +118,7 @@
    return res.status(200).send('Users removed');
  })
 
- router.post('/groupmgmt/removetopics', async (req, res) => {
+ router.post('/groupmgmt/removetopics', postAuth, async (req, res) => {
 
    const {selections, group_id, user_token} = req.body;
 
@@ -131,7 +138,7 @@
    return res.status(200).send('Topics removed')
  })
 
- router.post('/groupmgmt/disbandgroup', async (req, res) => {
+ router.post('/groupmgmt/disbandgroup', postAuth, async (req, res) => {
    const {group_id, user_token} = req.body;
 
    const group = await Group.findById(group_id);

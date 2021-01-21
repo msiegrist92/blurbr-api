@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const getAuth = require('../lib/getAuth');
 const Topic = require('../db/schemas/topic.js');
 const User = require('../db/schemas/user.js');
 const Post = require('../db/schemas/post.js');
@@ -11,7 +12,7 @@ const router = new express.Router();
 
 //returns topics that a user has created
 
-router.get('/user_topics/:id', async (req, res) => {
+router.get('/user_topics/:id', getAuth, async (req, res) => {
 
   try {
 
@@ -42,7 +43,7 @@ router.get('/user_topics/:id', async (req, res) => {
 
 //returns topics that belong to groups a user is a member of
 
-router.get('/member_topics/:id', async (req, res) => {
+router.get('/member_topics/:id', getAuth, async (req, res) => {
 
   const {id} = req.params;
 

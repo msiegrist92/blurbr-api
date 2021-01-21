@@ -5,6 +5,8 @@ const Group = require('../db/schemas/group.js');
 const Topic = require('../db/schemas/topic.js');
 const User = require('../db/schemas/user.js');
 const Token = require('../db/schemas/token.js');
+const postAuth = require('../lib/postAuth');
+const getAuth = require('../lib/getAuth');
 const mongooseQueries = require('../lib/mongooseQueries');
 const arrayControls = require('../lib/arrayControls');
 const validateOwner = require('../lib/validateOwner');
@@ -12,9 +14,10 @@ const mailgunFuncs = require('../lib/mailgun');
 const disbandGroup = require('../lib/disbandGroup');
 const mailgun = require('mailgun-js');
 
+
 const router = new express.Router();
 
-router.get('/groups', async (req, res) => {
+router.get('/groups', getAuth, async (req, res) => {
 
   try {
     const groups = await Group.find({}).lean();
@@ -30,7 +33,7 @@ router.get('/groups', async (req, res) => {
   }
 })
 
-router.get('/group/:id', async (req, res) => {
+router.get('/group/:id', getAuth, async (req, res) => {
   try {
     const group = await Group.findById(req.params.id).lean();
 
@@ -46,14 +49,9 @@ router.get('/group/:id', async (req, res) => {
 })
 
 
-router.post('/group', async (req, res) => {
+router.post('/group', postAuth, async (req, res) => {
 
   const {token, name, description} = req.body;
-
-  if(!token){
-    return res.status(403).send("Log in to create a new group")
-  }
-
 
   try {
     const owner_id = jwt.verify(token, process.env.JWT_SECRET)._id;

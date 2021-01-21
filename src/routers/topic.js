@@ -1,6 +1,11 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+
+const postAuth = require('../lib/postAuth');
+const getAuth = require ('../lib/getAuth');
+const pathsAuth = require('../lib/pathsAuth');
+
 const Topic = require('../db/schemas/topic.js');
 const User = require('../db/schemas/user.js');
 const Post = require('../db/schemas/post.js');
@@ -9,7 +14,7 @@ const mongooseQueries = require('../lib/mongooseQueries');
 
 const router = new express.Router();
 
-router.get('/topics', async (req, res) => {
+router.get('/topics', pathsAuth, async (req, res) => {
   try {
     const topics = await Topic.find({}).lean()
     return res.status(200).send(topics);
@@ -18,7 +23,7 @@ router.get('/topics', async (req, res) => {
   }
 })
 
-router.get('/topic/:id', async (req, res) => {
+router.get('/topic/:id', pathsAuth, async (req, res) => {
 
   try {
 
@@ -43,7 +48,7 @@ router.get('/topic/:id', async (req, res) => {
   }
 })
 
-router.get('/topic/:id/posts', async (req, res) => {
+router.get('/topic/:id/posts', getAuth, async (req, res) => {
   //mongoose enforces object id verify so will error before return null
   try {
     const topic = await Topic.findById(req.params.id).populate('posts');
@@ -56,7 +61,7 @@ router.get('/topic/:id/posts', async (req, res) => {
 })
 
 //route which returns all topics for use in all topics home page of client
-router.get('/topic', async (req, res) => {;
+router.get('/topic', getAuth, async (req, res) => {;
   try {
     const topics = await Topic.find({}).populate('author').lean();
     //this can be replaced with a mongooseQueries method
@@ -71,7 +76,7 @@ router.get('/topic', async (req, res) => {;
   }
 })
 
-router.get('/topic/:id/author', async (req, res) => {
+router.get('/topic/:id/author', getAuth, async (req, res) => {
   try {
     const topic = await Topic.findById(req.params.id).populate('author');
 
@@ -83,13 +88,10 @@ router.get('/topic/:id/author', async (req, res) => {
 })
 
 //attach user id to topic when creating new topic
-router.post('/topic', async (req, res) => {
+router.post('/topic', postAuth, async (req, res) => {
 
   const {title, body, group, token} = req.body;
 
-  if(!token){
-    return res.status(403).send('Log in to create a topic')
-  }
 
   try {
 
