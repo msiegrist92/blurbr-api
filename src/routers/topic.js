@@ -87,6 +87,19 @@ router.get('/topic/:id/author', getAuth, async (req, res) => {
   }
 })
 
+router.get('/topic/:id/usersallowed', getAuth, async (req, res) => {
+
+  const {id} = req.params;
+
+  try {
+    const group = await Group.find({topics : id})
+    console.log(group);
+    return res.status(200).send(group[0].users);
+  } catch (e){
+    return res.status(500).send(e);
+  }
+})
+
 //attach user id to topic when creating new topic
 router.post('/topic', postAuth, async (req, res) => {
 
