@@ -69,6 +69,8 @@
 
  router.get('/groupmgmt/approvereq/:token', async (req, res) => {
 
+   let message;
+
    const token_decode = jwt.verify(req.params.token, process.env.JWT_GROUP_KEY);
 
    const {user_id, group_id} = token_decode;
@@ -78,21 +80,30 @@
    const group = await Group.findById(group_id);
 
    if(user === null || group === null){
-     return res.status(403).send('Unauthorized back up')
+     message = `Not allowed back up off it`;
    }
 
    const members = group.users;
 
    if(members.includes(user._id)){
-     return res.send('User is already a member of your group');
+     message = `User is already a member of this group`;
    }
 
-   group.users.push(user._id);
-   await group.save();
-   user.groups.push(group._id);
-   await user.save();
+   try {
+     group.users.push(user._id);
+     await group.save();
+     user.groups.push(group._id);
+     await user.save();
 
-   return res.send('User approved!')
+     message = `User approved!`
+   } catch (e){
+     message = `Internal Server Error Please Try Again Later`
+   }
+   // message = `User approved!`
+   const to_render = {
+     message
+   }
+   await res.render('approvereq', to_render)
 
  })
 

@@ -21,9 +21,11 @@ router.get('/user_topics/:id', getAuth, async (req, res) => {
     //groups and topics contain array of IDs matching ref records
     const {groups, topics} = user;
 
+
     const user_groups = await mongooseQueries.populateByRefId(groups, Group);
 
-    const user_topics = await mongooseQueries.populateByRefIdWithVirtual(topics, Topic, 'posts');
+    let user_topics = await mongooseQueries.populateByRefIdWithVirtual(topics, Topic, 'posts');
+    user_topics = user_topics.filter((topic) => topic !== null);
 
     await mongooseQueries.loopFindRefAndAttach(user_topics, User, 'author', 'author');
 
@@ -33,6 +35,8 @@ router.get('/user_topics/:id', getAuth, async (req, res) => {
       user_groups,
       user_topics
     }
+
+    console.log('data', data)
 
     return res.status(200).send(data);
 

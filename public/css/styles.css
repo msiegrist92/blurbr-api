@@ -1,0 +1,50 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  width: 80%;
+  margin: 20vh auto 40vh;
+  height: 40vh;
+  display: grid;
+}
+
+.purple {
+  background-color: #6C186C;
+}
+
+.white_txt {
+  color: white;
+}
+
+.self_center {
+  justify-self: center;
+  align-self: center;
+}
+
+button {
+  color: white;
+  background-color: #FBBD08;
+  padding: 1em;
+  border-radius: 14px;
+  font-size: 1.75em;
+  outline: none;
+  box-shadow: none;
+  border: 2px solid white;
+}
+
+a:hover {
+  cursor: pointer;
+}
+
+a:hover button{
+  background-color: white;
+  color: #FBBD08;
+  cursor: pointer;
+}
+
+a:active button{
+  background-color: white;
+  color: #FBBD08;
+}
