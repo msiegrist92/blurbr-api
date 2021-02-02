@@ -14,6 +14,8 @@
  const disbandGroup = require('../lib/disbandGroup');
  const mailgun = require('mailgun-js');
 
+ const mongooseQueries = require('../lib/mongooseQueries');
+
  const router = new express.Router();
 
  //this endpoint receives user and group id from token and sends email to group owner
@@ -59,6 +61,11 @@
    const owned_group = await Group.findById(group);
    if(!owned_group.owner === user._id){
      return res.status(403).send()
+   }
+
+   console.log(owned_group.users, user._id);
+   if(owned_group.users.includes(user._id)){
+     return res.status(400).send("User is already a member")
    }
 
    const approve_token = jwt.sign({user_id: user._id, group_id: owned_group._id}, process.env.JWT_GROUP_KEY);
